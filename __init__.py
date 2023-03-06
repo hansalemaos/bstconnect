@@ -170,16 +170,19 @@ def _connect_to_all_localhost_devices(
     adb_path,
     timeout=10,
     bluestacks_config=r"C:\ProgramData\BlueStacks_nxt\bluestacks.conf",
+        start_server=False, reconnect=False
 ):
-    subprocess.run([adb_path, "start-server"])
+    if start_server:
+        subprocess.run([adb_path, "start-server"])
 
-    (
-        subprocess.run(
-            f'"{adb_path}" reconnect offline',
-            shell=True,
-            capture_output=True,
-        ).stdout.decode("utf-8", "ignore")
-    )
+    if reconnect:
+        (
+            subprocess.run(
+                f'"{adb_path}" reconnect offline',
+                shell=True,
+                capture_output=True,
+            ).stdout.decode("utf-8", "ignore")
+        )
 
     df2 = get_bst_config_df(conffile=bluestacks_config)
     ports = sorted(
