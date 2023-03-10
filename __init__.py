@@ -170,7 +170,8 @@ def _connect_to_all_localhost_devices(
     adb_path,
     timeout=10,
     bluestacks_config=r"C:\ProgramData\BlueStacks_nxt\bluestacks.conf",
-        start_server=False, reconnect=False
+    start_server=False,
+    reconnect=False,
 ):
     if start_server:
         subprocess.run([adb_path, "start-server"])
@@ -183,6 +184,15 @@ def _connect_to_all_localhost_devices(
                 capture_output=True,
             ).stdout.decode("utf-8", "ignore")
         )
+
+    activeadb_pid = -1
+    for p in psutil.process_iter():
+        if p.name().lower() == "adb.exe":
+            try:
+                activeadb_pid = p.pid
+            except Exception as fe:
+                print(fe)
+                continue
 
     df2 = get_bst_config_df(conffile=bluestacks_config)
     ports = sorted(
@@ -217,6 +227,7 @@ def _connect_to_all_localhost_devices(
         if timeoutfinal < time.time():
             break
         sleep(0.1)
+
     if timeoutfinal < time.time():
         for ac in kth:
             try:
@@ -225,8 +236,18 @@ def _connect_to_all_localhost_devices(
             except Exception as fe:
                 print(fe)
                 pass
+
+    if activeadb_pid > -1:
+        for p in psutil.process_iter():
+            if p.name().lower() == "adb.exe":
+                if p.pid != activeadb_pid:
+                    try:
+                        p.kill()
+                    except Exception as fe:
+                        print(fe)
+                        continue
+
     co = subprocess.run([adb_path, "devices", "-l"], capture_output=True)
-    # print(co.stdout.splitlines())
     co1 = [x for x in co.stdout.decode("utf-8", "ignore").splitlines() if x][1:]
     co = [re.findall(r"\b[^:\s]+:[^:\s]+\b", x) for x in co1]
     co2 = [
