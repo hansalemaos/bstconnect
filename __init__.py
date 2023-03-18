@@ -248,7 +248,14 @@ def _connect_to_all_localhost_devices(
                         continue
 
     co = subprocess.run([adb_path, "devices", "-l"], capture_output=True)
-    co1 = [x for x in co.stdout.decode("utf-8", "ignore").splitlines() if x][1:]
+    co = [
+        x
+        for x in co.stdout.decode("utf-8", "ignore").splitlines()
+        if "localhost:" in str(x).lower()
+    ]
+    # co1 = [x for x in co if x]
+    co1 = co.copy()
+
     co = [re.findall(r"\b[^:\s]+:[^:\s]+\b", x) for x in co1]
     co2 = [
         [f"status:{y.strip()}" for y in re.findall(r"\s+\b[^:\s]+\b\s+", x)]
